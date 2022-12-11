@@ -189,7 +189,7 @@ impl Safe {
         Ok(())
     }
 
-    pub fn list(&self, regex: Option<Regex>) {
+    pub fn list(&self, regex: Option<Regex>, show_pw: bool) {
         println!("Found entries:");
         let mut cnt = 0;
         for entry in &self.entries {
@@ -199,6 +199,15 @@ impl Safe {
                 .unwrap_or(true)
             {
                 println!(" - {}", entry);
+                if show_pw {
+                    println!(
+                        "   Password: '{}'",
+                        entry
+                            .fields
+                            .get("generic-password")
+                            .unwrap_or(&"<not-found>".to_owned())
+                    );
+                }
                 cnt += 1;
             }
         }

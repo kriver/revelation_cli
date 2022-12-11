@@ -21,6 +21,9 @@ pub enum Commands {
         /// The needle
         #[arg(value_parser = ci_regex)]
         regex: Regex,
+        /// Show password
+        #[arg(long = "pw", default_value = "false")]
+        show_pw: bool,
     },
 }
 

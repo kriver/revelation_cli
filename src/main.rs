@@ -20,8 +20,7 @@ fn main() {
         exit(-1);
     }
     match args.command {
-        Commands::List => safe.list(None),
-        Commands::Find { regex } => safe.list(Some(regex)),
-        _ => unimplemented!(),
+        Commands::List => safe.list(None, false),
+        Commands::Find { regex, show_pw } => safe.list(Some(regex), show_pw),
     }
 }
