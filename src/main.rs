@@ -5,11 +5,11 @@ use clap::Parser;
 mod cli;
 mod safe;
 
-use cli::Args;
+use cli::{Args, Commands};
 use safe::Safe;
 
 fn prompt_password() -> String {
-    rpassword::prompt_password("Safe key: ").unwrap()
+    rpassword::prompt_password("Enter safe key: ").unwrap()
 }
 
 fn main() {
@@ -19,5 +19,9 @@ fn main() {
         eprintln!("!! ERROR : {}", e);
         exit(-1);
     }
-    println!("All ok");
+    match args.command {
+        Commands::List => safe.list(None),
+        Commands::Find { regex } => safe.list(Some(regex)),
+        _ => unimplemented!(),
+    }
 }

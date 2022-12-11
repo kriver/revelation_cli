@@ -2,9 +2,11 @@ use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyIvInit};
 use chrono::TimeZone;
 use chrono::{offset::Local, DateTime};
 use compress::zlib::Decoder;
+use regex::Regex;
 use roxmltree::{Document, Node};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::fs::File;
 use std::io::{Error, ErrorKind, Read, Result};
 use std::path::PathBuf;
@@ -19,7 +21,7 @@ use std::path::PathBuf;
 struct Entry {
     entry_type: String,
     name: String,
-    description: String,
+    description: Option<String>,
     updated: DateTime<Local>,
     notes: String,
     // example keys: generic-url, generic-username, generic-email, generic-password
@@ -31,13 +33,23 @@ impl Entry {
         Entry {
             entry_type: entry_type.to_owned(),
             name: name.to_owned(),
-            description: description.to_owned(),
+            description: (!description.is_empty()).then(|| description.to_owned()),
             updated: Local
                 .timestamp_opt(updated.parse::<i64>().unwrap(), 0)
                 .unwrap(),
             notes: notes.to_owned(),
             fields: HashMap::new(),
         }
+    }
+}
+
+impl Display for Entry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} ({})", &self.name, &self.entry_type)?;
+        if let Some(d) = &self.description {
+            write!(f, " \"{}\"", d)?;
+        }
+        Ok(())
     }
 }
 
@@ -175,5 +187,21 @@ impl Safe {
         let xml = std::str::from_utf8(&decoded).unwrap();
         self.parse(&xml)?;
         Ok(())
+    }
+
+    pub fn list(&self, regex: Option<Regex>) {
+        println!("Found entries:");
+        let mut cnt = 0;
+        for entry in &self.entries {
+            if regex
+                .as_ref()
+                .map(|re| re.is_match(&entry.name))
+                .unwrap_or(true)
+            {
+                println!(" - {}", entry);
+                cnt += 1;
+            }
+        }
+        println!("Matched {}/{}", cnt, self.entries.len());
     }
 }
